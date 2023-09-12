@@ -23,7 +23,7 @@ export interface GameInfoState {
 }
 
 export const defaultGameInfoState: GameInfoState = {
-  gameMillSecNum: 300,
+  gameMillSecNum: 280,
   isStart: false,
   isGameOver: false,
   totalPannel: [15, 15],

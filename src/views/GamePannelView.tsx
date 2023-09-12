@@ -17,7 +17,6 @@ const GamePannelView: React.ForwardRefRenderFunction<
   IRefGamePannelView,
   IProps
 > = (_, ref) => {
-  console.log("GamePannelView");
   const [
     {
       gameMillSecNum,
@@ -105,7 +104,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
     let count = 0;
     let rtnNum = 5;
     let isCheck = false;
-    while (!isCheck || count > 5) {
+    while (!isCheck && count <= 5) {
       const randomNum = Math.floor(Math.random() * maxNum);
       if (!notAllowedNumArr.includes(randomNum)) {
         isCheck = true;
@@ -253,13 +252,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
   const changeKeyBoard = (newDirection: MOVE_DIRECTION) => {
     setGameInfoStateValue((prev) => {
       let checkedNewDirection: MOVE_DIRECTION = prev.direction;
-      console.log(
-        "키보드 변경 실행",
-        "현재값 : ",
-        checkedNewDirection,
-        "변경값 :",
-        newDirection
-      );
+
       if (
         newDirection === MOVE_DIRECTION.UP &&
         [MOVE_DIRECTION.LEFT, MOVE_DIRECTION.RIGHT].includes(prev.direction)
