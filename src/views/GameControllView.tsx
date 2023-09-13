@@ -72,7 +72,7 @@ const GameControllView: React.FC<IProps> = (props) => {
             onClick={onClickKeyBoard(MOVE_DIRECTION.UP)}
           ></img>
         </div>
-        <div className="flex gap-24">
+        <div className="flex gap-20">
           <img
             src={arrowLeft}
             alt="left"
