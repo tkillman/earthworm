@@ -1,4 +1,4 @@
-import { useRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import {
   LocalStoragyKey,
   MOVE_DIRECTION,
@@ -42,9 +42,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
     setGamePannelViewStateValue,
   ] = useRecoilState(gamePannelViewState);
 
-  const [{ isStart }, setGameControllViewStateValue] = useRecoilState(
-    gameControllViewState
-  );
+  const { isStart } = useRecoilValue(gameControllViewState);
 
   const refTimer = useRef<number | undefined>(undefined);
 
