@@ -12,7 +12,10 @@ import {
   useImperativeHandle,
   useCallback,
 } from "react";
-import { gameControllViewState } from "../recoil/gameControllViewState";
+import {
+  defaultGameControllViewStateValue,
+  gameControllViewState,
+} from "../recoil/gameControllViewState";
 
 interface IProps {}
 
@@ -42,7 +45,9 @@ const GamePannelView: React.ForwardRefRenderFunction<
     setGamePannelViewStateValue,
   ] = useRecoilState(gamePannelViewState);
 
-  const { isStart } = useRecoilValue(gameControllViewState);
+  const [{ isStart }, setGameControllViewStateValue] = useRecoilState(
+    gameControllViewState
+  );
 
   const refTimer = useRef<number | undefined>(undefined);
 
@@ -243,6 +248,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
     stopGame();
     window.alert("game over");
     handleInit();
+    setGameControllViewStateValue(defaultGameControllViewStateValue);
     const maxScore = Number(
       localStorage.getItem(LocalStoragyKey.maxScore) ?? 0
     );
@@ -250,7 +256,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
     if (score > maxScore) {
       localStorage.setItem(LocalStoragyKey.maxScore, String(score));
     }
-  }, [isGameOver, score, handleInit]);
+  }, [isGameOver, score, handleInit, setGameControllViewStateValue]);
 
   const changeKeyBoard = (newDirection: MOVE_DIRECTION) => {
     if (!isStart) {
