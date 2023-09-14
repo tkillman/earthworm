@@ -11,29 +11,25 @@ export const enum MOVE_DIRECTION {
   "RIGHT" = "RIGHT",
 }
 
-export interface GameInfoState {
+export interface GamePannelViewState {
   gameMillSecNum: number;
-  isStart: boolean;
   isGameOver: boolean;
   totalPannel: [number, number];
   currentShape: Array<[number, number]>;
   fruitPannel: [number, number];
-  direction: MOVE_DIRECTION;
   score: number;
 }
 
-export const defaultGameInfoState: GameInfoState = {
+export const defaultGamePannelViewStateValue: GamePannelViewState = {
   gameMillSecNum: 280,
-  isStart: false,
   isGameOver: false,
   totalPannel: [15, 15],
   currentShape: [[5, 5]],
   fruitPannel: [8, 8],
-  direction: MOVE_DIRECTION.RIGHT,
   score: 0,
 };
 
-export const gameInfoState = atom<GameInfoState>({
-  key: "gameInfoState",
-  default: defaultGameInfoState,
+export const gamePannelViewState = atom<GamePannelViewState>({
+  key: "gamePannelViewState",
+  default: defaultGamePannelViewStateValue,
 });

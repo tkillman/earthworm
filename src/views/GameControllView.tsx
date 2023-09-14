@@ -1,31 +1,34 @@
 import { useRecoilState } from "recoil";
-import {
-  LocalStoragyKey,
-  MOVE_DIRECTION,
-  defaultGameInfoState,
-  gameInfoState,
-} from "../recoil/gameInfoState";
 import arrowUp from "/src/assets/arrow-up.png";
 import arrowDown from "/src/assets/arrow-down.png";
 import arrowLeft from "/src/assets/arrow-left.png";
 import arrowRight from "/src/assets/arrow-right.png";
+import {
+  defaultGameControllViewStateValue,
+  gameControllViewState,
+} from "../recoil/gameControllViewState";
+import { LocalStoragyKey, MOVE_DIRECTION } from "../recoil/gamePannelViewState";
+import ScoreView from "./ScoreView";
 
 const KEY_BOARD_WIDTH = 50;
 
 interface IProps {
   handleKeyBoard?: (newDirection: MOVE_DIRECTION) => void;
+  handleInit?: VoidFunction;
 }
 
 const GameControllView: React.FC<IProps> = (props) => {
-  const [{ isStart, score }, setGameInfoStateValue] =
-    useRecoilState(gameInfoState);
+  const [{ isStart }, setGameControllViewState] = useRecoilState(
+    gameControllViewState
+  );
 
   const onClickInit = () => {
-    setGameInfoStateValue(defaultGameInfoState);
+    setGameControllViewState(defaultGameControllViewStateValue);
+    props.handleInit?.();
   };
 
   const onClickButtonStart = () => {
-    setGameInfoStateValue((prev) => ({
+    setGameControllViewState((prev) => ({
       ...prev,
       isStart: !prev.isStart,
     }));
@@ -61,7 +64,7 @@ const GameControllView: React.FC<IProps> = (props) => {
         <div>
           최고점수 : {localStorage.getItem(LocalStoragyKey.maxScore) ?? 0}
         </div>
-        <div> 현재점수 : {score}</div>
+        <ScoreView />
       </div>
       <div className="flex flex-col justify-around items-center min-w-[240px] gap-4">
         <div className="flex">
