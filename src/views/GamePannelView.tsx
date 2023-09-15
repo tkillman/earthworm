@@ -16,6 +16,10 @@ import {
   defaultGameControllViewStateValue,
   gameControllViewState,
 } from "../recoil/gameControllViewState";
+import snakeHead from "../assets/snakeHead.png";
+import snakeTail from "../assets/snakeTail.png";
+import snakeTurn from "../assets/snakeTurn.png";
+import apple from "../assets/apple.png";
 
 interface IProps {}
 
@@ -31,6 +35,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
   IProps
 > = (_, ref) => {
   const direction = useRef<MOVE_DIRECTION>(defaultDirection);
+
   const IsMoveCurrentShapeActive = useRef<boolean>(false);
 
   const [
@@ -41,6 +46,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
       currentShape,
       fruitPannel,
       score,
+      headDegree,
     },
     setGamePannelViewStateValue,
   ] = useRecoilState(gamePannelViewState);
@@ -51,19 +57,48 @@ const GamePannelView: React.ForwardRefRenderFunction<
 
   const refTimer = useRef<number | undefined>(undefined);
 
-  const getBgColor = (
-    isCurrent: boolean,
-    isNext: boolean
-  ): React.CSSProperties => {
-    if (isCurrent) {
+  const getBgStyle = (indexX: number, indexY: number): React.CSSProperties => {
+    const isCurrent = currentShape
+      .map((r) => JSON.stringify(r.xy))
+      .includes(JSON.stringify([indexX, indexY]));
+
+    const isFruit = fruitPannel[0] === indexX && fruitPannel[1] === indexY;
+
+    const isHead =
+      currentShape[0].xy[0] === indexX && currentShape[0].xy[1] === indexY;
+
+    if (isCurrent && isHead) {
       return {
-        backgroundColor: "orange",
+        //backgroundColor: "red",
+        backgroundImage: `url(${snakeHead})`,
+        backgroundPosition: "center center",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "contain",
+        transform: `rotate(${String(headDegree)}deg)`,
       };
     }
 
-    if (isNext) {
+    if (isCurrent && !isHead) {
+      const targetImg = currentShape.find(
+        (r) => r.xy[0] === indexX && r.xy[1] === indexY
+      )?.tailImg;
+      if (targetImg) {
+        return {
+          //backgroundColor: "red",
+          backgroundImage: `url(${targetImg})`,
+          backgroundPosition: "center center",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "contain",
+        };
+      }
+    }
+
+    if (isFruit) {
       return {
-        backgroundColor: "blue",
+        backgroundImage: `url(${apple})`,
+        backgroundPosition: "center center",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "contain",
       };
     }
 
@@ -164,6 +199,28 @@ const GamePannelView: React.ForwardRefRenderFunction<
     []
   );
 
+  const getHeadDegreeByDirection = (newDirection: MOVE_DIRECTION) => {
+    let rtnHeadDegree = 0;
+
+    if (newDirection === MOVE_DIRECTION.DOWN) {
+      return rtnHeadDegree;
+    }
+
+    if (newDirection === MOVE_DIRECTION.LEFT) {
+      return (rtnHeadDegree = 90);
+    }
+
+    if (newDirection === MOVE_DIRECTION.UP) {
+      return (rtnHeadDegree = 180);
+    }
+
+    if (newDirection === MOVE_DIRECTION.RIGHT) {
+      return (rtnHeadDegree = 270);
+    }
+
+    return rtnHeadDegree;
+  };
+
   const moveCurrentShape = useCallback(
     (newDirection: MOVE_DIRECTION) => {
       if (IsMoveCurrentShapeActive.current) {
@@ -176,28 +233,42 @@ const GamePannelView: React.ForwardRefRenderFunction<
         let nextCurrentShape = prev.currentShape;
 
         if (prev.currentShape.length === 1) {
-          nextCurrentShape = [moveHead(prev.currentShape[0], newDirection)];
+          nextCurrentShape = [
+            {
+              xy: moveHead(prev.currentShape[0].xy, newDirection),
+              tailImg: snakeTail,
+            },
+          ];
         } else {
-          const newHeadShape = moveHead(prev.currentShape[0], newDirection);
+          const newHeadShape = moveHead(prev.currentShape[0].xy, newDirection);
           const newTailShape = prev.currentShape.slice(
             0,
             prev.currentShape.length - 1
           );
 
-          nextCurrentShape = [newHeadShape, ...newTailShape];
+          nextCurrentShape = [
+            { xy: newHeadShape, tailImg: snakeTail },
+            ...newTailShape,
+          ];
         }
 
-        const isGameOver = calcIsGameOVer(prev.totalPannel, nextCurrentShape);
-        const isAteFruit = calcIsAteFruit(prev.fruitPannel, nextCurrentShape);
+        const isGameOver = calcIsGameOVer(
+          prev.totalPannel,
+          nextCurrentShape.map((r) => r.xy)
+        );
+        const isAteFruit = calcIsAteFruit(
+          prev.fruitPannel,
+          nextCurrentShape.map((r) => r.xy)
+        );
 
         if (isAteFruit) {
-          nextCurrentShape = [prev.fruitPannel, ...prev.currentShape];
+          nextCurrentShape = [{ xy: prev.fruitPannel }, ...prev.currentShape];
         }
 
         const newFruitPannel = isAteFruit
           ? createNewFruitPannel(
-              [prev.fruitPannel[0], ...nextCurrentShape.map((r) => r[0])],
-              [prev.fruitPannel[1], ...nextCurrentShape.map((r) => r[1])]
+              [prev.fruitPannel[0], ...nextCurrentShape.map((r) => r.xy[0])],
+              [prev.fruitPannel[1], ...nextCurrentShape.map((r) => r.xy[1])]
             )
           : prev.fruitPannel;
 
@@ -207,9 +278,10 @@ const GamePannelView: React.ForwardRefRenderFunction<
           isGameOver,
           fruitPannel: newFruitPannel,
           gameMillSecNum: isAteFruit
-            ? prev.gameMillSecNum - 20
+            ? prev.gameMillSecNum - 5
             : prev.gameMillSecNum,
           score: isAteFruit ? prev.score + 1 : prev.score,
+          headDegree: getHeadDegreeByDirection(newDirection),
         };
       });
 
@@ -259,9 +331,9 @@ const GamePannelView: React.ForwardRefRenderFunction<
   }, [isGameOver, score, handleInit, setGameControllViewStateValue]);
 
   const changeKeyBoard = (newDirection: MOVE_DIRECTION) => {
-    if (!isStart) {
-      return;
-    }
+    // if (!isStart) {
+    //   return;
+    // }
 
     if (
       (newDirection === MOVE_DIRECTION.UP &&
@@ -278,6 +350,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
     }
 
     moveCurrentShape(newDirection);
+    //changeHeadCss(newDirection);
     direction.current = newDirection;
   };
 
@@ -288,6 +361,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
 
   return (
     <div className="flex flex-col">
+      {JSON.stringify(currentShape)}
       {Array(totalPannel[1])
         .fill(null)
         .map((_, indexY) => {
@@ -296,20 +370,13 @@ const GamePannelView: React.ForwardRefRenderFunction<
               {Array(totalPannel[0])
                 .fill(null)
                 .map((_, indexX) => {
-                  const isCurrent = currentShape
-                    .map((r) => JSON.stringify(r))
-                    .includes(JSON.stringify([indexX, indexY]));
-
-                  const isNext =
-                    fruitPannel[0] === indexX && fruitPannel[1] === indexY;
-
                   return (
                     <div
                       key={indexX}
                       data-x={indexX}
                       data-y={indexY}
                       className={`w-[30px] h-[30px]  border border-solid border-black box-border`}
-                      style={getBgColor(isCurrent, isNext)}
+                      style={getBgStyle(indexX, indexY)}
                     ></div>
                   );
                 })}

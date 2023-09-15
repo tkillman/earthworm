@@ -15,18 +15,20 @@ export interface GamePannelViewState {
   gameMillSecNum: number;
   isGameOver: boolean;
   totalPannel: [number, number];
-  currentShape: Array<[number, number]>;
+  currentShape: Array<{ xy: [number, number]; tailImg?: string }>;
   fruitPannel: [number, number];
   score: number;
+  headDegree: number; // 머리 rotate 정보
 }
 
 export const defaultGamePannelViewStateValue: GamePannelViewState = {
   gameMillSecNum: 280,
   isGameOver: false,
   totalPannel: [15, 15],
-  currentShape: [[5, 5]],
+  currentShape: [{ xy: [5, 5] }],
   fruitPannel: [8, 8],
   score: 0,
+  headDegree: 270,
 };
 
 export const gamePannelViewState = atom<GamePannelViewState>({
