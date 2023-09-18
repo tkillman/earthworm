@@ -508,7 +508,6 @@ const GamePannelView: React.ForwardRefRenderFunction<
 
   return (
     <div className="flex flex-col">
-      {JSON.stringify(currentShape)}
       {Array(totalPannel[1])
         .fill(null)
         .map((_, indexY) => {
