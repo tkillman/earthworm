@@ -479,9 +479,9 @@ const GamePannelView: React.ForwardRefRenderFunction<
   }, [isGameOver, score, handleInit, setGameControllViewStateValue]);
 
   const changeKeyBoard = (newDirection: MOVE_DIRECTION) => {
-    // if (!isStart) {
-    //   return;
-    // }
+    if (!isStart) {
+      return;
+    }
 
     if (
       (newDirection === MOVE_DIRECTION.UP &&
