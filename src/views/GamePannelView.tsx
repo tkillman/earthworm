@@ -186,28 +186,6 @@ const GamePannelView: React.ForwardRefRenderFunction<
     []
   );
 
-  const getHeadDegreeByDirection = (newDirection: MOVE_DIRECTION) => {
-    let rtnHeadDegree = 0;
-
-    if (newDirection === MOVE_DIRECTION.DOWN) {
-      return rtnHeadDegree;
-    }
-
-    if (newDirection === MOVE_DIRECTION.LEFT) {
-      return (rtnHeadDegree = 90);
-    }
-
-    if (newDirection === MOVE_DIRECTION.UP) {
-      return (rtnHeadDegree = 180);
-    }
-
-    if (newDirection === MOVE_DIRECTION.RIGHT) {
-      return (rtnHeadDegree = 270);
-    }
-
-    return rtnHeadDegree;
-  };
-
   const getHeadRotateDegree = (newDirection: MOVE_DIRECTION): IImgInfo => {
     const rtnValue = { tailImg: snakeHead, rotateDegree: 0 };
     if (newDirection === MOVE_DIRECTION.DOWN) {
@@ -429,7 +407,6 @@ const GamePannelView: React.ForwardRefRenderFunction<
             ? prev.gameMillSecNum - 5
             : prev.gameMillSecNum,
           score: isAteFruit ? prev.score + 1 : prev.score,
-          headDegree: getHeadDegreeByDirection(newDirection),
         };
       });
 
