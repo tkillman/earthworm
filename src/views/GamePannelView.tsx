@@ -85,6 +85,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
         backgroundRepeat: "no-repeat",
         backgroundSize: "contain",
         transform: `rotate(${String(rotateDegree)}deg)`,
+        borderWidth: "0px",
       };
     }
 
