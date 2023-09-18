@@ -1,7 +1,11 @@
 import { useRecoilState } from "recoil";
 import {
+  IImgInfo,
   LocalStoragyKey,
   MOVE_DIRECTION,
+  Shape,
+  TypeCurrentShapeArr,
+  TypeXy,
   defaultGamePannelViewStateValue,
   gamePannelViewState,
 } from "../recoil/gamePannelViewState";
@@ -20,6 +24,7 @@ import snakeHead from "../assets/snakeHead.png";
 import snakeTail from "../assets/snakeTail.png";
 import snakeTurn from "../assets/snakeTurn.png";
 import apple from "../assets/apple.png";
+import { produce } from "immer";
 
 interface IProps {}
 
@@ -46,7 +51,6 @@ const GamePannelView: React.ForwardRefRenderFunction<
       currentShape,
       fruitPannel,
       score,
-      headDegree,
     },
     setGamePannelViewStateValue,
   ] = useRecoilState(gamePannelViewState);
@@ -58,40 +62,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
   const refTimer = useRef<number | undefined>(undefined);
 
   const getBgStyle = (indexX: number, indexY: number): React.CSSProperties => {
-    const isCurrent = currentShape
-      .map((r) => JSON.stringify(r.xy))
-      .includes(JSON.stringify([indexX, indexY]));
-
     const isFruit = fruitPannel[0] === indexX && fruitPannel[1] === indexY;
-
-    const isHead =
-      currentShape[0].xy[0] === indexX && currentShape[0].xy[1] === indexY;
-
-    if (isCurrent && isHead) {
-      return {
-        //backgroundColor: "red",
-        backgroundImage: `url(${snakeHead})`,
-        backgroundPosition: "center center",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "contain",
-        transform: `rotate(${String(headDegree)}deg)`,
-      };
-    }
-
-    if (isCurrent && !isHead) {
-      const targetImg = currentShape.find(
-        (r) => r.xy[0] === indexX && r.xy[1] === indexY
-      )?.tailImg;
-      if (targetImg) {
-        return {
-          //backgroundColor: "red",
-          backgroundImage: `url(${targetImg})`,
-          backgroundPosition: "center center",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "contain",
-        };
-      }
-    }
 
     if (isFruit) {
       return {
@@ -102,14 +73,29 @@ const GamePannelView: React.ForwardRefRenderFunction<
       };
     }
 
+    const targetShape = currentShape.find(
+      (r) => JSON.stringify(r.xy) === JSON.stringify([indexX, indexY])
+    );
+
+    if (targetShape && targetShape.imgImfo) {
+      const { tailImg, rotateDegree } = targetShape.imgImfo;
+      return {
+        backgroundImage: `url(${tailImg})`,
+        backgroundPosition: "center center",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "contain",
+        transform: `rotate(${String(rotateDegree)}deg)`,
+      };
+    }
+
     return {
       backgroundColor: "gray",
     };
   };
 
   const calcIsGameOVer = (
-    paramTotalPannel: [number, number],
-    nextCurrentShape: [number, number][]
+    paramTotalPannel: TypeXy,
+    nextCurrentShape: TypeXy[]
   ) => {
     const headCurrentShape = nextCurrentShape[0];
 
@@ -137,8 +123,8 @@ const GamePannelView: React.ForwardRefRenderFunction<
   };
 
   const calcIsAteFruit = (
-    paramFruitPannel: [number, number],
-    nextCurrentShape: [number, number][]
+    paramFruitPannel: TypeXy,
+    nextCurrentShape: TypeXy[]
   ) => {
     const headCurrentShape = nextCurrentShape[0];
 
@@ -168,7 +154,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
   };
 
   const createNewFruitPannel = useCallback(
-    (existXArr: number[], existYArr: number[]): [number, number] => {
+    (existXArr: number[], existYArr: number[]): TypeXy => {
       const newX = getNewNum(totalPannel[0], existXArr);
       const newY = getNewNum(totalPannel[1], existYArr);
 
@@ -178,7 +164,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
   );
 
   const moveHead = useCallback(
-    (paramHeadShape: [number, number], newDirection: MOVE_DIRECTION) => {
+    (paramHeadShape: TypeXy, newDirection: MOVE_DIRECTION): TypeXy => {
       let rtnNewHeadShape = paramHeadShape;
       if (newDirection === MOVE_DIRECTION.RIGHT) {
         rtnNewHeadShape = [paramHeadShape[0] + 1, paramHeadShape[1]];
@@ -221,6 +207,162 @@ const GamePannelView: React.ForwardRefRenderFunction<
     return rtnHeadDegree;
   };
 
+  const getHeadRotateDegree = (newDirection: MOVE_DIRECTION): IImgInfo => {
+    const rtnValue = { tailImg: snakeHead, rotateDegree: 0 };
+    if (newDirection === MOVE_DIRECTION.DOWN) {
+      return rtnValue;
+    }
+    if (newDirection === MOVE_DIRECTION.LEFT) {
+      rtnValue.rotateDegree = 90;
+      return rtnValue;
+    }
+    if (newDirection === MOVE_DIRECTION.UP) {
+      rtnValue.rotateDegree = 180;
+      return rtnValue;
+    }
+    if (newDirection === MOVE_DIRECTION.RIGHT) {
+      rtnValue.rotateDegree = 270;
+      return rtnValue;
+    }
+
+    return rtnValue;
+  };
+
+  const replaceSecondImgInfo = (
+    nextCurrentShape: TypeCurrentShapeArr,
+    newDirection: MOVE_DIRECTION
+  ) => {
+    const replaceSecondImgNextCurrentShape = produce(
+      nextCurrentShape,
+      (draft) => {
+        if (draft.length > 1) {
+          if (
+            direction.current === MOVE_DIRECTION.RIGHT &&
+            newDirection === MOVE_DIRECTION.UP
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTurn,
+              rotateDegree: 270,
+            };
+          }
+
+          if (
+            direction.current === MOVE_DIRECTION.RIGHT &&
+            newDirection === MOVE_DIRECTION.RIGHT
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTail,
+              rotateDegree: 0,
+            };
+          }
+
+          if (
+            direction.current === MOVE_DIRECTION.RIGHT &&
+            newDirection === MOVE_DIRECTION.DOWN
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTurn,
+              rotateDegree: 180,
+            };
+          }
+
+          if (
+            direction.current === MOVE_DIRECTION.LEFT &&
+            newDirection === MOVE_DIRECTION.UP
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTurn,
+              rotateDegree: 0,
+            };
+          }
+
+          if (
+            direction.current === MOVE_DIRECTION.LEFT &&
+            newDirection === MOVE_DIRECTION.LEFT
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTail,
+              rotateDegree: 0,
+            };
+          }
+
+          if (
+            direction.current === MOVE_DIRECTION.LEFT &&
+            newDirection === MOVE_DIRECTION.DOWN
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTurn,
+              rotateDegree: 90,
+            };
+          }
+
+          if (
+            direction.current === MOVE_DIRECTION.DOWN &&
+            newDirection === MOVE_DIRECTION.LEFT
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTurn,
+              rotateDegree: 270,
+            };
+          }
+
+          if (
+            direction.current === MOVE_DIRECTION.DOWN &&
+            newDirection === MOVE_DIRECTION.DOWN
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTail,
+              rotateDegree: 90,
+            };
+          }
+
+          if (
+            direction.current === MOVE_DIRECTION.DOWN &&
+            newDirection === MOVE_DIRECTION.RIGHT
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTurn,
+              rotateDegree: 0,
+            };
+          }
+
+          if (
+            direction.current === MOVE_DIRECTION.UP &&
+            newDirection === MOVE_DIRECTION.LEFT
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTurn,
+              rotateDegree: 180,
+            };
+          }
+
+          if (
+            direction.current === MOVE_DIRECTION.UP &&
+            newDirection === MOVE_DIRECTION.UP
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTail,
+              rotateDegree: 90,
+            };
+          }
+
+          if (
+            direction.current === MOVE_DIRECTION.UP &&
+            newDirection === MOVE_DIRECTION.RIGHT
+          ) {
+            draft[1].imgImfo = {
+              tailImg: snakeTurn,
+              rotateDegree: 90,
+            };
+          }
+        }
+        return draft;
+      }
+    );
+
+    return replaceSecondImgNextCurrentShape;
+  };
+
   const moveCurrentShape = useCallback(
     (newDirection: MOVE_DIRECTION) => {
       if (IsMoveCurrentShapeActive.current) {
@@ -233,12 +375,11 @@ const GamePannelView: React.ForwardRefRenderFunction<
         let nextCurrentShape = prev.currentShape;
 
         if (prev.currentShape.length === 1) {
-          nextCurrentShape = [
-            {
-              xy: moveHead(prev.currentShape[0].xy, newDirection),
-              tailImg: snakeTail,
-            },
-          ];
+          const newHeadShape: Shape = {
+            xy: moveHead(prev.currentShape[0].xy, newDirection),
+            imgImfo: getHeadRotateDegree(newDirection),
+          };
+          nextCurrentShape = [newHeadShape];
         } else {
           const newHeadShape = moveHead(prev.currentShape[0].xy, newDirection);
           const newTailShape = prev.currentShape.slice(
@@ -247,7 +388,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
           );
 
           nextCurrentShape = [
-            { xy: newHeadShape, tailImg: snakeTail },
+            { xy: newHeadShape, imgImfo: getHeadRotateDegree(newDirection) },
             ...newTailShape,
           ];
         }
@@ -262,7 +403,13 @@ const GamePannelView: React.ForwardRefRenderFunction<
         );
 
         if (isAteFruit) {
-          nextCurrentShape = [{ xy: prev.fruitPannel }, ...prev.currentShape];
+          nextCurrentShape = [
+            {
+              xy: prev.fruitPannel,
+              imgImfo: getHeadRotateDegree(newDirection),
+            },
+            ...prev.currentShape,
+          ];
         }
 
         const newFruitPannel = isAteFruit
@@ -274,7 +421,7 @@ const GamePannelView: React.ForwardRefRenderFunction<
 
         return {
           ...prev,
-          currentShape: nextCurrentShape,
+          currentShape: replaceSecondImgInfo(nextCurrentShape, newDirection),
           isGameOver,
           fruitPannel: newFruitPannel,
           gameMillSecNum: isAteFruit

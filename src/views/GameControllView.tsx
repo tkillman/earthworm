@@ -66,7 +66,7 @@ const GameControllView: React.FC<IProps> = (props) => {
         </div>
         <ScoreView />
       </div>
-      <div className="flex flex-col justify-around items-center min-w-[240px] gap-4">
+      <div className="flex flex-col justify-around items-center min-w-[240px] gap-3">
         <div className="flex">
           <img
             src={arrowUp}

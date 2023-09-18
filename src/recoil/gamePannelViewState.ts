@@ -1,4 +1,5 @@
 import { atom } from "recoil";
+import snakeHead from "../assets/snakeHead.png";
 
 export const enum LocalStoragyKey {
   "maxScore" = "maxScore",
@@ -11,24 +12,34 @@ export const enum MOVE_DIRECTION {
   "RIGHT" = "RIGHT",
 }
 
+export type TypeXy = [number, number];
+
+export interface IImgInfo {
+  tailImg: string;
+  rotateDegree: number;
+}
+
+export type Shape = { xy: TypeXy; imgImfo?: IImgInfo };
+export type TypeCurrentShapeArr = Array<Shape>;
+
 export interface GamePannelViewState {
   gameMillSecNum: number;
   isGameOver: boolean;
-  totalPannel: [number, number];
-  currentShape: Array<{ xy: [number, number]; tailImg?: string }>;
-  fruitPannel: [number, number];
+  totalPannel: TypeXy;
+  currentShape: TypeCurrentShapeArr;
+  fruitPannel: TypeXy;
   score: number;
-  headDegree: number; // 머리 rotate 정보
 }
 
 export const defaultGamePannelViewStateValue: GamePannelViewState = {
   gameMillSecNum: 280,
   isGameOver: false,
   totalPannel: [15, 15],
-  currentShape: [{ xy: [5, 5] }],
+  currentShape: [
+    { xy: [5, 5], imgImfo: { tailImg: snakeHead, rotateDegree: 270 } },
+  ],
   fruitPannel: [8, 8],
   score: 0,
-  headDegree: 270,
 };
 
 export const gamePannelViewState = atom<GamePannelViewState>({
